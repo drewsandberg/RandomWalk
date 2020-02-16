@@ -1,0 +1,89 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+
+library(ggplot2)
+library(tidyverse)
+library(stats)
+library(geosphere)
+```
+
+
+```{r}
+
+
+    df = as.data.frame(matrix(nrow = 0, ncol = 3))
+
+
+for (j in 1:1000) {
+    
+  x=0
+  y=0
+    
+  for (i in 1:10000) {
+      d <- sample(1:4,1,replace = TRUE)
+      if(d == 1) y = y + 1
+      if(d == 2) x = x + 1
+      if(d == 3) y = y - 1
+      if(d == 4) x = x - 1
+  }
+    
+  distance.from.origin = sqrt(x^2 + y^2) 
+  df = rbind(df, c(x,y, distance.from.origin))
+}
+
+hist(df[,3])
+
+
+
+
+
+```
+
+```{r}
+new.coord = function(coord, bearing, meters){
+  a = geosphere::destPoint(coord, bearing, meters)
+}
+```
+
+
+```{r}
+origin = c(-96.772871, 46.823313)
+#df = as.data.frame(matrix(nrow = 0, ncol = 4))
+df = data.frame("Latitude" = numeric(),
+                "Longitude" = numeric(),
+                "Bearing" = numeric())
+
+point = origin
+brg = sample(0:359,1,replace = TRUE)
+
+for (i in 1:1000) {
+  next.point = new.coord(point, brg, 1.504)
+  df = rbind(df, c(next.point[2], next.point[1], brg))
+  
+  brg.adj = sample(-5:5,1,replace = TRUE)
+  brg = brg + brg.adj
+  if(brg < 0) brg = brg + 360
+  if(brg > 359) brg = brg - 360
+  point = next.point
+}
+
+colnames(df) <- c("Latitude", "Longitude", "Bearing")
+
+g = ggplot(df, aes(x = Longitude, y = Latitude)) +
+  geom_point() +
+  #scale_x_continuous(breaks = seq(min(df$Longitude), max(df$Longitude), .001))+
+  theme(axis.text.x = element_text(angle = 90))
+
+print(g)
+
+
+print(geosphere::distHaversine(origin, point) * 0.00062137)
+# find out what converting a dataframe to a sinple features dataset means ... see package sf
+
+```
+
+
